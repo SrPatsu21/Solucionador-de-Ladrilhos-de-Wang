@@ -191,7 +191,12 @@ int main(void)
 Compile:
 
 ```bash
-cc -std=c11 -Wall -Wextra -pedantic src/main.c -o wang_solver -lraylib -lm
+cc -std=c11 -Wall -Wextra -pedantic \
+    src/main.c \
+    src/tile.c \
+    src/renderer.c \
+    -o wang_solver \
+    -lraylib -lm
 ```
 
 Execute:

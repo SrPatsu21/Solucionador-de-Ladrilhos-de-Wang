@@ -5,8 +5,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define TILE_BORDER_THICKNESS 6
-
 static Color tileColorToRaylib(TileColor color)
 {
     switch (color) {
@@ -44,6 +42,14 @@ void rendererDrawTile(
     Color bottomColor = tileColorToRaylib(tile->bottom);
     Color leftColor = tileColorToRaylib(tile->left);
 
+    int centerX = x + size / 2;
+    int centerY = y + size / 2;
+
+    int triangleSize = size;
+
+    /*
+     * Fundo do ladrilho
+     */
     DrawRectangle(
         x,
         y,
@@ -52,38 +58,129 @@ void rendererDrawTile(
         LIGHTGRAY
     );
 
-    DrawRectangle(
-        x,
-        y,
-        size,
-        TILE_BORDER_THICKNESS,
+    /*
+     * TRIÂNGULO SUPERIOR
+     *
+     *        RED
+     *     ───────
+     *      \   /
+     *       \ /
+     *        ▼
+     *
+     * Os dois primeiros vértices
+     * ficam na borda superior.
+     *
+     * O terceiro fica no centro.
+     */
+    DrawTriangle(
+        (Vector2){
+            centerX - triangleSize / 2,
+            y
+        },
+        (Vector2){
+            centerX + triangleSize / 2,
+            y
+        },
+        (Vector2){
+            centerX,
+            centerY
+        },
         topColor
     );
 
-    DrawRectangle(
-        x + size - TILE_BORDER_THICKNESS,
-        y,
-        TILE_BORDER_THICKNESS,
-        size,
+    /*
+     * TRIÂNGULO DIREITO
+     *
+     *             ────
+     *            /    |
+     *           /     |
+     *          /      |
+     *              BLUE
+     *
+     * Os dois primeiros vértices
+     * ficam na borda direita.
+     *
+     * O terceiro fica no centro.
+     */
+    DrawTriangle(
+        (Vector2){
+            x + size,
+            centerY - triangleSize / 2
+        },
+        (Vector2){
+            x + size,
+            centerY + triangleSize / 2
+        },
+        (Vector2){
+            centerX,
+            centerY
+        },
         rightColor
     );
 
-    DrawRectangle(
-        x,
-        y + size - TILE_BORDER_THICKNESS,
-        size,
-        TILE_BORDER_THICKNESS,
+    /*
+     * TRIÂNGULO INFERIOR
+     *
+     *        ▲
+     *       / \
+     *      /   \
+     *     ───────
+     *       GREEN
+     *
+     * Os dois primeiros vértices
+     * ficam na borda inferior.
+     *
+     * O terceiro fica no centro.
+     */
+    DrawTriangle(
+        (Vector2){
+            centerX - triangleSize / 2,
+            y + size
+        },
+        (Vector2){
+            centerX + triangleSize / 2,
+            y + size
+        },
+        (Vector2){
+            centerX,
+            centerY
+        },
         bottomColor
     );
 
-    DrawRectangle(
-        x,
-        y,
-        TILE_BORDER_THICKNESS,
-        size,
+    /*
+     * TRIÂNGULO ESQUERDO
+     *
+     *        |
+     *       /|
+     *      / |
+     *     /  |
+     * YELLOW
+     *
+     * Os dois primeiros vértices
+     * ficam na borda esquerda.
+     *
+     * O terceiro fica no centro.
+     */
+    DrawTriangle(
+        (Vector2){
+            x,
+            centerY - triangleSize / 2
+        },
+        (Vector2){
+            x,
+            centerY + triangleSize / 2
+        },
+        (Vector2){
+            centerX,
+            centerY
+        },
         leftColor
     );
 
+    /*
+     * Borda externa do ladrilho
+     */
     DrawRectangleLines(
         x,
         y,
@@ -92,6 +189,9 @@ void rendererDrawTile(
         BLACK
     );
 
+    /*
+     * ID do ladrilho
+     */
     char idText[32];
 
     snprintf(
@@ -107,7 +207,10 @@ void rendererDrawTile(
         fontSize = 10;
     }
 
-    int textWidth = MeasureText(idText, fontSize);
+    int textWidth = MeasureText(
+        idText,
+        fontSize
+    );
 
     DrawText(
         idText,

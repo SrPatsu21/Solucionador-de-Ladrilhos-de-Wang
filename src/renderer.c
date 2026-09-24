@@ -45,8 +45,6 @@ void rendererDrawTile(
     int centerX = x + size / 2;
     int centerY = y + size / 2;
 
-    int triangleSize = size;
-
     /*
      * Fundo do ladrilho
      */
@@ -66,24 +64,19 @@ void rendererDrawTile(
      *      \   /
      *       \ /
      *        ▼
-     *
-     * Os dois primeiros vértices
-     * ficam na borda superior.
-     *
-     * O terceiro fica no centro.
      */
     DrawTriangle(
         (Vector2){
-            centerX - triangleSize / 2,
-            y
-        },
-        (Vector2){
-            centerX + triangleSize / 2,
+            x,
             y
         },
         (Vector2){
             centerX,
             centerY
+        },
+        (Vector2){
+            x + size,
+            y
         },
         topColor
     );
@@ -91,29 +84,24 @@ void rendererDrawTile(
     /*
      * TRIÂNGULO DIREITO
      *
-     *             ────
-     *            /    |
-     *           /     |
-     *          /      |
-     *              BLUE
-     *
-     * Os dois primeiros vértices
-     * ficam na borda direita.
-     *
-     * O terceiro fica no centro.
+     *          BLUE
+     *            >
+     *           / \
+     *          /   \
+     *         /     \
      */
     DrawTriangle(
         (Vector2){
             x + size,
-            centerY - triangleSize / 2
-        },
-        (Vector2){
-            x + size,
-            centerY + triangleSize / 2
+            y
         },
         (Vector2){
             centerX,
             centerY
+        },
+        (Vector2){
+            x + size,
+            y + size
         },
         rightColor
     );
@@ -125,20 +113,15 @@ void rendererDrawTile(
      *       / \
      *      /   \
      *     ───────
-     *       GREEN
-     *
-     * Os dois primeiros vértices
-     * ficam na borda inferior.
-     *
-     * O terceiro fica no centro.
+     *      GREEN
      */
     DrawTriangle(
         (Vector2){
-            centerX - triangleSize / 2,
+            x,
             y + size
         },
         (Vector2){
-            centerX + triangleSize / 2,
+            x + size,
             y + size
         },
         (Vector2){
@@ -151,25 +134,20 @@ void rendererDrawTile(
     /*
      * TRIÂNGULO ESQUERDO
      *
-     *        |
-     *       /|
-     *      / |
-     *     /  |
-     * YELLOW
-     *
-     * Os dois primeiros vértices
-     * ficam na borda esquerda.
-     *
-     * O terceiro fica no centro.
-     */
+     *      YELLOW
+     *        <
+     *       / \
+     *      /   \
+     *     /     \
+    */
     DrawTriangle(
         (Vector2){
             x,
-            centerY - triangleSize / 2
+            y
         },
         (Vector2){
             x,
-            centerY + triangleSize / 2
+            y + size
         },
         (Vector2){
             centerX,

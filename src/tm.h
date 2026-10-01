@@ -7,54 +7,73 @@
 typedef enum {
     TM_MOVE_LEFT,
     TM_MOVE_RIGHT,
-    TM_MOVE_UP,
-    TM_MOVE_DOWN,
     TM_MOVE_STAY
 } TMMove;
 
 typedef struct {
-    int currentState;
-
     char readSymbol;
-
-    int nextState;
     char writeSymbol;
 
     TMMove move;
+
+    int nextTape;
+} TMTapeAction;
+
+typedef struct {
+    int currentState;
+
+    TMTapeAction action;
+
+    int nextState;
 } TMTransition;
 
 typedef struct {
-    char **cells;
+    char *cells;
 
-    size_t rows;
-    size_t columns;
-
-    size_t headRow;
-    size_t headColumn;
+    size_t size;
+    size_t head;
 } TMTape;
 
 typedef struct {
     int stateCount;
+    int tapeCount;
     int transitionCount;
 
     TMTransition *transitions;
 
     int initialState;
+    int initialTape;
+
     int acceptState;
     int rejectState;
 } TuringMachine;
 
 typedef struct {
+    int previousState;
+    int previousTape;
+
+    int tapeIndex;
+    size_t headPosition;
+
+    char previousSymbol;
+} TMHistoryEntry;
+
+typedef struct {
     TuringMachine *machine;
 
-    TMTape *tape;
+    TMTape *tapes;
 
     int currentState;
+    int activeTape;
 
     bool halted;
     bool accepted;
 
     size_t stepCount;
+
+    TMHistoryEntry *history;
+    size_t historyCount;
+    size_t historyCapacity;
 } TMExecution;
 
 bool tmLoad(
@@ -68,8 +87,7 @@ void tmDestroy(
 
 bool tmTapeCreate(
     TMTape *tape,
-    size_t rows,
-    size_t columns
+    size_t size
 );
 
 void tmTapeDestroy(
@@ -79,7 +97,7 @@ void tmTapeDestroy(
 bool tmExecutionCreate(
     TMExecution *execution,
     TuringMachine *machine,
-    TMTape *tape
+    TMTape *tapes
 );
 
 void tmExecutionReset(

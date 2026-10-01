@@ -1,0 +1,9 @@
+states: 4
+tapes: 1
+initial: q0
+initial-tape: 0
+accept: q2
+reject: q3
+
+q0 0 -> q0 1 R 0
+q0 _ -> q0 2 R 0

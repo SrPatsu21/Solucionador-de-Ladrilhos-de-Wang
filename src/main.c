@@ -3,6 +3,7 @@
 #include "renderer.h"
 #include "tile.h"
 #include "tm.h"
+#include "solver.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -20,249 +21,96 @@ int main(void)
     InitWindow(
         screenWidth,
         screenHeight,
-        "Solucionador de Ladrilhos de Wang"
+        "Solucionador de Ladrilhos de Wang (Backtracking)"
     );
 
     printf("[DEBUG] Janela inicializada.\n");
 
     SetTargetFPS(60);
 
-    TuringMachine machine;
+    /*
+     * 1. Criação de um conjunto de ladrilhos (TileSet) de exemplo
+     */
+    const size_t tileCount = 2;
+    Tile *tileSet = malloc(tileCount * sizeof(Tile));
 
+    tileSet[0] = tileCreate(1, TILE_COLOR_RED, TILE_COLOR_GREEN, TILE_COLOR_BLUE, TILE_COLOR_YELLOW);
+    tileSet[1] = tileCreate(2, TILE_COLOR_BLUE, TILE_COLOR_YELLOW, TILE_COLOR_RED, TILE_COLOR_GREEN);
+
+    // tileSet[2] = tileCreate(3, TILE_COLOR_GREEN, TILE_COLOR_RED, TILE_COLOR_YELLOW, TILE_COLOR_GREEN);
+    // tileSet[3] = tileCreate(4, TILE_COLOR_YELLOW, TILE_COLOR_GREEN, TILE_COLOR_BLUE, TILE_COLOR_RED);
+    // tileSet[4] = tileCreate(5, TILE_COLOR_RED, TILE_COLOR_RED, TILE_COLOR_RED, TILE_COLOR_RED);
+
+    printf("[DEBUG] Conjunto de ladrilhos criado (%zu ladrilhos).\n", tileCount);
+
+    /*
+     * 2. Inicialização do Solucionador Wang (Grade 3x3)
+     */
+    int boardWidth = 3;
+    int boardHeight = 3;
+
+    printf("[DEBUG] Inicializando WangSolver (%dx%d)...\n", boardWidth, boardHeight);
+    WangSolver solver = wangSolverCreate(boardWidth, boardHeight, tileSet, tileCount);
+    printf("[DEBUG] WangSolver inicializado com sucesso.\n");
+
+    /*
+     * Carregamento opcional da Máquina de Turing (mantido da sua estrutura original se precisar exibir a fita)
+     */
+    TuringMachine machine;
     printf("[DEBUG] Carregando maquina de Turing: machine.txt\n");
 
-    if (!tmLoad(
-        "machine.txt",
-        &machine
-    ))
-    {
-        printf("[ERRO] Falha ao carregar machine.txt.\n");
-        printf("[DEBUG] Fechando janela.\n");
-
-        CloseWindow();
-
-        return 1;
-    }
-
-    printf("[DEBUG] Maquina carregada com sucesso.\n");
-    printf("[DEBUG] Estados: %d\n", machine.stateCount);
-    printf("[DEBUG] Fitas: %d\n", machine.tapeCount);
-    printf("[DEBUG] Transicoes: %d\n", machine.transitionCount);
-    printf("[DEBUG] Estado inicial: %d\n", machine.initialState);
-    printf("[DEBUG] Fita inicial: %d\n", machine.initialTape);
-    printf("[DEBUG] Estado de aceitacao: %d\n", machine.acceptState);
-    printf("[DEBUG] Estado de rejeicao: %d\n", machine.rejectState);
-
-    /*
-     * Cria todas as fitas da máquina.
-     */
-    printf("[DEBUG] Criando vetor de fitas...\n");
-
-    TMTape *tapes = calloc(
-        (size_t)machine.tapeCount,
-        sizeof(TMTape)
-    );
-
-    if (tapes == NULL)
-    {
-        printf("[ERRO] Falha ao alocar memoria para as fitas.\n");
-
-        tmDestroy(&machine);
-
-        printf("[DEBUG] Fechando janela.\n");
-
-        CloseWindow();
-
-        return 1;
-    }
-
-    printf("[DEBUG] Vetor de fitas criado.\n");
-
-    /*
-     * Tamanho inicial de cada fita.
-     *
-     * Por enquanto todas possuem o mesmo
-     * tamanho. Posteriormente podemos
-     * permitir tamanhos diferentes.
-     */
-    const size_t tapeSize = 100;
-
-    printf(
-        "[DEBUG] Tamanho de cada fita: %zu\n",
-        tapeSize
-    );
-
-    bool tapesCreated = true;
-
-    for (
-        int i = 0;
-        i < machine.tapeCount;
-        i++
-    )
-    {
-        printf(
-            "[DEBUG] Criando fita %d...\n",
-            i
-        );
-
-        if (!tmTapeCreate(
-            &tapes[i],
-            tapeSize
-        ))
-        {
-            printf(
-                "[ERRO] Falha ao criar fita %d.\n",
-                i
-            );
-
-            tapesCreated = false;
-
-            break;
-        }
-
-        printf(
-            "[DEBUG] Fita %d criada com sucesso.\n",
-            i
-        );
-    }
-
-    if (!tapesCreated)
-    {
-        printf("[ERRO] Nao foi possivel criar todas as fitas.\n");
-        printf("[DEBUG] Liberando fitas ja criadas.\n");
-
-        for (
-            int i = 0;
-            i < machine.tapeCount;
-            i++
-        )
-        {
-            tmTapeDestroy(
-                &tapes[i]
-            );
-        }
-
-        free(tapes);
-
-        tmDestroy(&machine);
-
-        printf("[DEBUG] Fechando janela.\n");
-
-        CloseWindow();
-
-        return 1;
-    }
-
-    printf("[DEBUG] Todas as fitas foram criadas.\n");
-
-    // Init test
-
-    /*
-     * Dados iniciais para teste.
-     *
-     * A fita começa assim:
-     *
-     * 0 0 0 _ _ _ _ ...
-     * ^
-     * cabeca
-     */
-    tapes[0].cells[0] = '0';
-    tapes[0].cells[1] = '0';
-    tapes[0].cells[2] = '0';
-    tapes[0].cells[3] = '0';
-
-    printf("[DEBUG] Dados iniciais colocados na fita 0.\n");
-
-    printf("[DEBUG] Fita 0: ");
-
-    for (
-        size_t i = 0;
-        i < 10;
-        i++
-    )
-    {
-        printf(
-            "%c ",
-            tapes[0].cells[i]
-        );
-    }
-
-    printf("\n");
-
-    // end test
-
+    bool hasTM = tmLoad("machine.txt", &machine);
+    TMTape *tapes = NULL;
     TMExecution execution;
+    bool executionCreated = false;
 
-    printf("[DEBUG] Criando execucao da maquina...\n");
-
-    if (!tmExecutionCreate(
-        &execution,
-        &machine,
-        tapes
-    ))
-    {
-        printf("[ERRO] Falha ao criar execucao da maquina.\n");
-
-        for (
-            int i = 0;
-            i < machine.tapeCount;
-            i++
-        )
-        {
-            tmTapeDestroy(
-                &tapes[i]
-            );
+    if (hasTM) {
+        printf("[DEBUG] Maquina carregada com sucesso.\n");
+        tapes = calloc((size_t)machine.tapeCount, sizeof(TMTape));
+        if (tapes != NULL) {
+            for (int i = 0; i < machine.tapeCount; i++) {
+                tmTapeCreate(&tapes[i], 100);
+            }
+            if (tmExecutionCreate(&execution, &machine, tapes)) {
+                executionCreated = true;
+                printf("[DEBUG] Execucao da Maquina de Turing criada.\n");
+            }
         }
-
-        free(tapes);
-
-        tmDestroy(&machine);
-
-        printf("[DEBUG] Fechando janela.\n");
-
-        CloseWindow();
-
-        return 1;
+    } else {
+        printf("[AVISO] machine.txt nao encontrado ou invalido. Apenas o solver de ladrilhos sera exibido.\n");
     }
-
-    printf("[DEBUG] Execucao criada com sucesso.\n");
-    printf(
-        "[DEBUG] Estado atual: %d\n",
-        execution.currentState
-    );
-    printf(
-        "[DEBUG] Fita ativa: %d\n",
-        execution.activeTape
-    );
-
-    Tile tile = tileCreate(
-        1,
-        TILE_COLOR_RED,
-        TILE_COLOR_BLUE,
-        TILE_COLOR_GREEN,
-        TILE_COLOR_YELLOW
-    );
-
-    printf("[DEBUG] Ladrilho criado.\n");
-
-    tilePrint(&tile);
 
     printf("[DEBUG] Entrando no loop principal.\n");
 
     while (!WindowShouldClose())
     {
-        rendererHandleTMControls(
-            &execution
-        );
+        /*
+         * Controles do Solver:
+         * SPACE - Executa um passo do backtracking
+         * R - Reseta o solver
+         */
+        if (IsKeyPressed(KEY_SPACE)) {
+            if (!solver.solved && !solver.failed) {
+                bool progressed = wangSolverStep(&solver);
+                printf("[DEBUG] WangSolver step executado. Solved: %d, Failed: %d\n", solver.solved, solver.failed);
+            }
+        }
+
+        if (IsKeyPressed(KEY_R)) {
+            wangSolverReset(&solver);
+            printf("[DEBUG] WangSolver resetado.\n");
+        }
+
+        if (executionCreated) {
+            rendererHandleTMControls(&execution);
+        }
 
         BeginDrawing();
 
-        ClearBackground(
-            RAYWHITE
-        );
+        ClearBackground(RAYWHITE);
 
         DrawText(
-            "Solucionador de Ladrilhos de Wang",
+            "Solucionador de Ladrilhos de Wang - Backtracking",
             20,
             20,
             30,
@@ -270,100 +118,84 @@ int main(void)
         );
 
         /*
-         * Ladrilho.
+         * Renderização do Tabuleiro de Ladrilhos (Grade)
          */
-        rendererDrawTile(
-            &tile,
-            100,
-            100,
-            150
-        );
+        int tileSize = 100;
+        int startBoardX = 100;
+        int startBoardY = 100;
+
+        for (int y = 0; y < boardHeight; y++) {
+            for (int x = 0; x < boardWidth; x++) {
+                int drawX = startBoardX + x * (tileSize + 10);
+                int drawY = startBoardY + y * (tileSize + 10);
+
+                Tile *currentTile = solver.board.cells[y * boardWidth + x];
+
+                if (currentTile != NULL) {
+                    // Desenha o ladrilho posicionado usando a sua função do renderer.c
+                    rendererDrawTile(currentTile, drawX, drawY, tileSize);
+                } else {
+                    // Desenha uma célula vazia cinza
+                    DrawRectangle(drawX, drawY, tileSize, tileSize, LIGHTGRAY);
+                    DrawRectangleLines(drawX, drawY, tileSize, tileSize, DARKGRAY);
+                    
+                    char coordText[16];
+                    snprintf(coordText, sizeof(coordText), "%d,%d", x, y);
+                    DrawText(coordText, drawX + 25, drawY + 40, 15, DARKGRAY);
+                }
+            }
+        }
 
         /*
-         * Fita abaixo dos ladrilhos.
-         *
-         * O x representa o centro da fita.
+         * Status do Solver na tela
          */
-        rendererDrawTM(
-            &execution,
-            screenWidth / 2,
-            400,
-            40
-        );
+        if (solver.solved) {
+            DrawText("STATUS: Solucao encontrada!", 100, 450, 20, GREEN);
+        } else if (solver.failed) {
+            DrawText("STATUS: Sem solucao para este conjunto!", 100, 450, 20, RED);
+        } else {
+            DrawText("STATUS: Buscando...", 100, 450, 20, DARKBLUE);
+        }
 
-        DrawText(
-            "SPACE - Proximo passo",
-            20,
-            620,
-            20,
-            BLACK
-        );
+        /*
+         * Renderização da Fita da Máquina de Turing (se carregada)
+         */
+        if (executionCreated) {
+            rendererDrawTM(
+                &execution,
+                screenWidth / 2 + 100,
+                550,
+                40
+            );
+        }
 
-        DrawText(
-            "BACKSPACE - Passo anterior",
-            20,
-            650,
-            20,
-            BLACK
-        );
-
-        DrawText(
-            "R - Reiniciar",
-            20,
-            680,
-            20,
-            BLACK
-        );
+        /*
+         * Instruções de Teclado
+         */
+        DrawText("SPACE - Proximo passo do Solver", 20, 620, 20, BLACK);
+        DrawText("R - Reiniciar Solver", 20, 650, 20, BLACK);
 
         EndDrawing();
     }
 
     printf("[DEBUG] Loop principal encerrado.\n");
 
-    if (WindowShouldClose())
-    {
-        printf(
-            "[DEBUG] WindowShouldClose() retornou true.\n"
-        );
-    }
-
     /*
-     * Libera todas as fitas.
+     * Liberação de Recursos
      */
-    printf("[DEBUG] Liberando fitas...\n");
+    wangSolverDestroy(&solver);
+    free(tileSet);
 
-    for (
-        int i = 0;
-        i < machine.tapeCount;
-        i++
-    )
-    {
-        printf(
-            "[DEBUG] Liberando fita %d...\n",
-            i
-        );
-
-        tmTapeDestroy(
-            &tapes[i]
-        );
+    if (executionCreated) {
+        for (int i = 0; i < machine.tapeCount; i++) {
+            tmTapeDestroy(&tapes[i]);
+        }
+        free(tapes);
+        tmDestroy(&machine);
     }
-
-    free(tapes);
-
-    printf("[DEBUG] Fitas liberadas.\n");
-
-    printf("[DEBUG] Destruindo maquina...\n");
-
-    tmDestroy(
-        &machine
-    );
-
-    printf("[DEBUG] Maquina destruida.\n");
 
     printf("[DEBUG] Fechando janela...\n");
-
     CloseWindow();
-
     printf("[DEBUG] Programa encerrado normalmente.\n");
 
     return 0;

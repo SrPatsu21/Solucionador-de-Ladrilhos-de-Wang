@@ -196,6 +196,7 @@ cc -std=c11 -Wall -Wextra -pedantic \
     src/tile.c \
     src/renderer.c \
     src/tm.c \
+    src/solver.c \
     -o wang_solver \
     -lraylib -lm
 ```

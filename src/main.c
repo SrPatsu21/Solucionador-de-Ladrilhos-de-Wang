@@ -31,11 +31,12 @@ int main(void)
     /*
      * 1. Criação de um conjunto de ladrilhos (TileSet) de exemplo
      */
-    const size_t tileCount = 2;
+    const size_t tileCount = 3;
     Tile *tileSet = malloc(tileCount * sizeof(Tile));
 
     tileSet[0] = tileCreate(1, TILE_COLOR_RED, TILE_COLOR_GREEN, TILE_COLOR_BLUE, TILE_COLOR_YELLOW);
-    tileSet[1] = tileCreate(2, TILE_COLOR_BLUE, TILE_COLOR_YELLOW, TILE_COLOR_RED, TILE_COLOR_GREEN);
+    tileSet[1] = tileCreate(2, TILE_COLOR_BLUE, TILE_COLOR_GREEN, TILE_COLOR_YELLOW, TILE_COLOR_RED);
+    tileSet[2] = tileCreate(3, TILE_COLOR_BLUE, TILE_COLOR_YELLOW, TILE_COLOR_RED, TILE_COLOR_GREEN);
 
     // tileSet[2] = tileCreate(3, TILE_COLOR_GREEN, TILE_COLOR_RED, TILE_COLOR_YELLOW, TILE_COLOR_GREEN);
     // tileSet[3] = tileCreate(4, TILE_COLOR_YELLOW, TILE_COLOR_GREEN, TILE_COLOR_BLUE, TILE_COLOR_RED);
@@ -89,16 +90,21 @@ int main(void)
          * SPACE - Executa um passo do backtracking
          * R - Reseta o solver
          */
+        // Avançar o solver com SPACE
         if (IsKeyPressed(KEY_SPACE)) {
             if (!solver.solved && !solver.failed) {
-                bool progressed = wangSolverStep(&solver);
-                printf("[DEBUG] WangSolver step executado. Solved: %d, Failed: %d\n", solver.solved, solver.failed);
+                wangSolverStep(&solver);
             }
         }
 
+        // Voltar um passo atrás com BACKSPACE
+        if (IsKeyPressed(KEY_BACKSPACE)) {
+            wangSolverStepBack(&solver);
+        }
+
+        // Reiniciar com R
         if (IsKeyPressed(KEY_R)) {
             wangSolverReset(&solver);
-            printf("[DEBUG] WangSolver resetado.\n");
         }
 
         if (executionCreated) {
@@ -172,8 +178,8 @@ int main(void)
         /*
          * Instruções de Teclado
          */
-        DrawText("SPACE - Proximo passo do Solver", 20, 620, 20, BLACK);
-        DrawText("R - Reiniciar Solver", 20, 650, 20, BLACK);
+        DrawText("BACKSPACE - Voltar passo anterior | SPACE - Proximo passo do Solver", 20, 630, 20, BLACK);
+        DrawText("R - Reiniciar Solver", 20, 660, 20, BLACK);
 
         EndDrawing();
     }

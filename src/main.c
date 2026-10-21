@@ -85,30 +85,8 @@ int main(void)
 
     while (!WindowShouldClose())
     {
-        /*
-         * Controles do Solver:
-         * SPACE - Executa um passo do backtracking
-         * R - Reseta o solver
-         */
-        // Avançar o solver com SPACE
-        if (IsKeyPressed(KEY_SPACE)) {
-            if (!solver.solved && !solver.failed) {
-                wangSolverStep(&solver);
-            }
-        }
-
-        // Voltar um passo atrás com BACKSPACE
-        if (IsKeyPressed(KEY_BACKSPACE)) {
-            wangSolverStepBack(&solver);
-        }
-
-        // Reiniciar com R
-        if (IsKeyPressed(KEY_R)) {
-            wangSolverReset(&solver);
-        }
-
         if (executionCreated) {
-            rendererHandleTMControls(&execution);
+            rendererHandleTMControls(&execution, &solver);
         }
 
         BeginDrawing();

@@ -588,9 +588,9 @@ A primeira versão pode ter somente:
 │        │   │   │   │   │                            │
 │        └───┴───┴───┴───┘       [ Passo ]            │
 │                                                     │
-│                                  [ Limpar ]          │
+│                                [ Limpar ]           │
 │                                                     │
-│ Status: buscando...                                  │
+│ Status: buscando...                                 │
 └─────────────────────────────────────────────────────┘
 ```
 

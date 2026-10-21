@@ -3,6 +3,7 @@
 
 #include "tile.h"
 #include "tm.h"
+#include "solver.h"
 
 void rendererDrawTile(
     const Tile *tile,
@@ -19,7 +20,8 @@ void rendererDrawTM(
 );
 
 void rendererHandleTMControls(
-    TMExecution *execution
+    TMExecution *execution,
+    WangSolver *solver
 );
 
 #endif

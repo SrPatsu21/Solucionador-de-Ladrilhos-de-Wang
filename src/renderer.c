@@ -425,7 +425,8 @@ void rendererDrawTM(
 }
 
 void rendererHandleTMControls(
-    TMExecution *execution
+    TMExecution *execution,
+    WangSolver *solver
 )
 {
     if (execution == NULL)
@@ -435,16 +436,21 @@ void rendererHandleTMControls(
 
     if (IsKeyPressed(KEY_SPACE))
     {
+        if (!solver->solved && !solver->failed) {
+            wangSolverStep(solver);
+        }
         tmStep(execution);
     }
 
     if (IsKeyPressed(KEY_BACKSPACE))
     {
+        wangSolverStepBack(solver);
         tmStepBack(execution);
     }
 
     if (IsKeyPressed(KEY_R))
     {
+        wangSolverReset(solver);
         tmExecutionReset(execution);
     }
 }

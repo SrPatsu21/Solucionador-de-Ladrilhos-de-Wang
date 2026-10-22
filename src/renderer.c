@@ -451,6 +451,9 @@ void rendererHandleTMControls(
     if (IsKeyPressed(KEY_R))
     {
         wangSolverReset(solver);
-        tmExecutionReset(execution);
+        while(execution->tapes->head > 0) {
+            tmStepBack(execution);
+        }
+        // tmExecutionReset(execution);
     }
 }

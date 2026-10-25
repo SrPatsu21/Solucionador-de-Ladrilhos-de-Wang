@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(void)
 {
@@ -69,11 +70,38 @@ int main(void)
         printf("[DEBUG] Maquina carregada com sucesso.\n");
         tapes = calloc((size_t)machine.tapeCount, sizeof(TMTape));
         if (tapes != NULL) {
+            char boardId[32];
+
+            snprintf(
+                boardId,
+                sizeof(boardId),
+                "%dx%d|",
+                boardWidth,
+                boardHeight
+            );
+
+            size_t prefixSize = strlen(boardId);
+            size_t totalCells = (size_t)boardWidth * (size_t)boardHeight;
+
+            /*
+            * Prefixo + quatro caracteres por ladrilho
+            * + um separador entre ladrilhos.
+            */
+            size_t tapeSize = prefixSize + totalCells * 5 - 1;
+
+            bool tapesCreated = true;
+
             for (int i = 0; i < machine.tapeCount; i++) {
-                tmTapeCreate(&tapes[i], 100);
+                if (!tmTapeCreate(&tapes[i], tapeSize)) {
+                    tapesCreated = false;
+                    break;
+                }
             }
-            if (tmExecutionCreate(&execution, &machine, tapes)) {
+
+            if (tapesCreated &&
+                tmExecutionCreate(&execution, &machine, tapes)) {
                 executionCreated = true;
+
                 printf("[DEBUG] Execucao da Maquina de Turing criada.\n");
             }
         }
@@ -147,9 +175,9 @@ int main(void)
         if (executionCreated) {
             rendererDrawTM(
                 &execution,
-                screenWidth / 2 + 100,
+                screenWidth / 2,
                 550,
-                40
+                20
             );
         }
 

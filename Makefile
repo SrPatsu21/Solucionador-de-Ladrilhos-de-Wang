@@ -1,7 +1,7 @@
 CC = cc
 
 CFLAGS = -std=c11 -Wall -Wextra -pedantic -O2
-LDFLAGS = -lraylib -lm
+LDFLAGS = -lraylib -lm -lX11
 
 TARGET = wang_solver
 
